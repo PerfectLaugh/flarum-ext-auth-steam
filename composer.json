@@ -1,5 +1,5 @@
 {
-    "name": "sijad/flarum-ext-auth-steam",
+    "name": "PerfectLaugh/flarum-ext-auth-steam",
     "description": "Allow users to log in with their steam account.",
     "type": "flarum-extension",
     "keywords": ["authentication"],
