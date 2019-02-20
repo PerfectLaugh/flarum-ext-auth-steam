@@ -7,7 +7,8 @@
 namespace Sijad\Auth\Steam;
 
 use Exception;
-use Flarum\Forum\AuthenticationResponseFactory;
+use Flarum\Forum\Auth\Registration;
+use Flarum\Forum\Auth\ResponseFactory;
 use Flarum\Http\Controller\ControllerInterface;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -29,7 +30,7 @@ class SteamAuthController implements ControllerInterface
     const API_URL = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002';
 
     /**
-     * @var AuthenticationResponseFactory
+     * @var ResponseFactory
      */
     protected $authResponse;
 
@@ -39,10 +40,10 @@ class SteamAuthController implements ControllerInterface
     protected $settings;
 
     /**
-     * @param AuthenticationResponseFactory $authResponse
+     * @param ResponseFactory $authResponse
      * @param SettingsRepositoryInterface $settings
      */
-    public function __construct(AuthenticationResponseFactory $authResponse, SettingsRepositoryInterface $settings)
+    public function __construct(ResponseFactory $authResponse, SettingsRepositoryInterface $settings)
     {
         $this->authResponse = $authResponse;
         $this->settings = $settings;
@@ -119,11 +120,13 @@ class SteamAuthController implements ControllerInterface
                         'avatarUrl' => array_get($info, 'response.players.0.avatarfull'),
                     ];
                     return $this->authResponse->make(
-                        $request,
-                        [
-                            'steam_id' => $steamId,
-                        ],
-                        $suggestions
+                        'steam', $steamId,
+                        function (Registration $registration) use ($suggestions, $steamId) {
+                            $registration
+                                ->provideAvatar($suggestions->avatarUrl)
+                                ->suggestUsername($steamId)
+                                ->setPayload(get_object_vars($suggestions));
+                        }
                     );
                 }
             } catch (Exception $e) { }
